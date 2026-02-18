@@ -180,7 +180,7 @@ export function CapsuleView() {
                                     <label className="block text-sm font-medium mb-1.5">Season</label>
                                     <select
                                         value={newSeason}
-                                        onChange={(e) => setNewSeason(e.target.value)}
+                                        onChange={(e) => setNewSeason(e.target.value as (typeof SEASONS)[number])}
                                         className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                     >
                                         {SEASONS.map(s => <option key={s} value={s}>{s}</option>)}
