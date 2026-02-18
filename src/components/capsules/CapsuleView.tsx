@@ -180,6 +180,7 @@ export function CapsuleView() {
                                     <label className="block text-sm font-medium mb-1.5">Season</label>
                                     <select
                                         value={newSeason}
+                                        // Added explicit cast to Season to fix Vercel build error
                                         onChange={(e) => setNewSeason(e.target.value as Season)}
                                         className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                     >
