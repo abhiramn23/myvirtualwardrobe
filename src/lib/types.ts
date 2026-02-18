@@ -154,5 +154,6 @@ export const CATEGORY_ICONS: Record<ItemCategory, string> = {
 
 export const OCCASION_TYPES = ['Wedding', 'Office', 'Party', 'Casual', 'Gym', 'Custom'] as const;
 export const SEASONS = ['Winter', 'Summer', 'Spring', 'Autumn', 'Wedding', 'Travel', 'Custom'] as const;
+export type Season = (typeof SEASONS)[number];
 export const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'] as const;
 export const BODY_TYPES = ['Slim', 'Athletic', 'Average', 'Muscular', 'Plus Size'] as const;

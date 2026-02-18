@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useCapsules } from '@/hooks/useCapsules';
 import { useItems } from '@/hooks/useItems';
-import { SEASONS, Item, Capsule } from '@/lib/types';
+import { SEASONS, Item, Capsule, Season } from '@/lib/types';
 import { formatCurrency, cn } from '@/lib/utils';
 
 export function CapsuleView() {
@@ -32,7 +32,7 @@ export function CapsuleView() {
 
     // Create Capsule Form
     const [newName, setNewName] = useState('');
-    const [newSeason, setNewSeason] = useState<(typeof SEASONS)[number]>(SEASONS[0]);
+    const [newSeason, setNewSeason] = useState<Season>(SEASONS[0]);
     const [creating, setCreating] = useState(false);
 
     const handleCreate = async () => {
@@ -180,7 +180,7 @@ export function CapsuleView() {
                                     <label className="block text-sm font-medium mb-1.5">Season</label>
                                     <select
                                         value={newSeason}
-                                        onChange={(e) => setNewSeason(e.target.value as (typeof SEASONS)[number])}
+                                        onChange={(e) => setNewSeason(e.target.value as Season)}
                                         className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                     >
                                         {SEASONS.map(s => <option key={s} value={s}>{s}</option>)}
