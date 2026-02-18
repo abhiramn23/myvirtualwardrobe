@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Virtual Wardrobe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, sans-serif;
+      width: 320px;
+      background: #fafafa;
+      color: #18181b;
+    }
+    .header {
+      padding: 16px;
+      text-align: center;
+      border-bottom: 1px solid #e4e4e7;
+      background: linear-gradient(135deg, #f5f0e8, #f2d7d5);
+    }
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .header p {
+      font-size: 11px;
+      color: #71717a;
+      margin-top: 4px;
+    }
+    .section {
+      padding: 16px;
+    }
+    .login-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .login-section input {
+      padding: 10px 12px;
+      border: 1px solid #e4e4e7;
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+    }
+    .login-section input:focus {
+      border-color: #18181b;
+    }
+    .btn {
+      padding: 10px;
+      background: #18181b;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .product-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .product-card {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: white;
+      border: 1px solid #e4e4e7;
+      border-radius: 12px;
+    }
+    .product-card img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #f4f4f5;
+    }
+    .product-card .info {
+      flex: 1;
+      min-width: 0;
+    }
+    .product-card .info h3 {
+      font-size: 13px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .product-card .info p {
+      font-size: 12px;
+      color: #71717a;
+      margin-top: 2px;
+    }
+    .product-card .info .price {
+      font-size: 14px;
+      font-weight: 600;
+      color: #18181b;
+      margin-top: 4px;
+    }
+    .status {
+      text-align: center;
+      padding: 12px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+    .status.success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .no-product {
+      text-align: center;
+      color: #71717a;
+      font-size: 13px;
+      padding: 20px 0;
+    }
+    .category-select {
+      padding: 10px 12px;
+      border: 1px solid #e4e4e7;
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>👗 My Virtual Wardrobe</h1>
+    <p>Save products to your wishlist</p>
+  </div>
+
+  <!-- Login Section -->
+  <div id="login-view" class="section">
+    <div class="login-section">
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button class="btn" id="login-btn">Sign In</button>
+      <div id="login-status"></div>
+    </div>
+  </div>
+
+  <!-- Product Section -->
+  <div id="product-view" class="section" style="display: none;">
+    <div class="product-info">
+      <div id="product-card" class="product-card" style="display: none;">
+        <img id="product-image" src="" alt="Product" />
+        <div class="info">
+          <h3 id="product-title"></h3>
+          <p id="product-url-display"></p>
+          <p class="price" id="product-price"></p>
+        </div>
+      </div>
+      <div id="no-product" class="no-product">
+        No product detected on this page. Try visiting a product page.
+      </div>
+      <select id="category-select" class="category-select">
+        <option value="shirts">Shirts</option>
+        <option value="pants">Pants</option>
+        <option value="shoes">Shoes</option>
+        <option value="accessories">Accessories</option>
+      </select>
+      <button class="btn" id="save-btn" disabled>Save to Wishlist</button>
+      <div id="save-status"></div>
+      <button class="btn" id="logout-btn" style="background: #f4f4f5; color: #18181b;">Sign Out</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
