@@ -1,20 +1,20 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Link as LinkIcon, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { X, Upload, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
 import { CATEGORIES, ItemCategory, ItemStatus, Item } from '@/lib/types';
-import { calculateSimilarity, cn } from '@/lib/utils';
+import { StarRating } from './StarRating';
 
-interface AddItemModalProps {
+interface EditItemModalProps {
     isOpen: boolean;
+    item: Item | null;
     onClose: () => void;
-    onAdd: (item: Omit<Item, 'id' | 'user_id' | 'created_at' | 'wear_count'>) => Promise<unknown>;
+    onSave: (id: string, updates: Partial<Item>) => Promise<unknown>;
     onUploadImage: (file: File) => Promise<string | null>;
-    existingItems: Item[];
 }
 
-export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingItems }: AddItemModalProps) {
+export function EditItemModal({ isOpen, item, onClose, onSave, onUploadImage }: EditItemModalProps) {
     const [title, setTitle] = useState('');
     const [imageUrl, setImageUrl] = useState('');
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -25,25 +25,36 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
     const [status, setStatus] = useState<ItemStatus>('wishlist');
     const [productLink, setProductLink] = useState('');
     const [purchaseDate, setPurchaseDate] = useState('');
+    const [wearCount, setWearCount] = useState('0');
+    const [rating, setRating] = useState<number | null>(null);
+    const [regret, setRegret] = useState(false);
+    const [reviewText, setReviewText] = useState('');
+    const [targetCPW, setTargetCPW] = useState('');
     const [loading, setLoading] = useState(false);
     const [imageMode, setImageMode] = useState<'url' | 'upload'>('url');
-    const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const resetForm = () => {
-        setTitle('');
-        setImageUrl('');
-        setImageFile(null);
-        setImagePreview(null);
-        setPrice('');
-        setBrand('');
-        setCategory('shirts');
-        setStatus('wishlist');
-        setProductLink('');
-        setPurchaseDate('');
-        setImageMode('url');
-        setDuplicateWarning(null);
-    };
+    // Pre-fill form when item changes
+    useEffect(() => {
+        if (item) {
+            setTitle(item.title);
+            setImageUrl(item.image_url || '');
+            setPrice(String(item.price));
+            setBrand(item.brand || '');
+            setCategory(item.category);
+            setStatus(item.status);
+            setProductLink(item.product_link || '');
+            setPurchaseDate(item.purchase_date || '');
+            setWearCount(String(item.wear_count));
+            setRating(item.rating);
+            setRegret(item.regret || false);
+            setReviewText(item.review_text || '');
+            setTargetCPW(item.target_cp_wear ? String(item.target_cp_wear) : '');
+            setImageFile(null);
+            setImagePreview(null);
+            setImageMode(item.image_url ? 'url' : 'url');
+        }
+    }, [item]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -55,29 +66,12 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
         }
     };
 
-    const checkDuplicates = (val: string, b: string, c: ItemCategory) => {
-        if (val.length < 3) return;
-
-        const similar = existingItems.find(item => {
-            const score = calculateSimilarity(
-                { title: val, brand: b, category: c },
-                { title: item.title, brand: item.brand, category: item.category }
-            );
-            return score > 0.6;
-        });
-
-        if (similar) {
-            setDuplicateWarning(`You might already have a similar item: "${similar.title}"`);
-        } else {
-            setDuplicateWarning(null);
-        }
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!item) return;
         setLoading(true);
 
-        let finalImageUrl: string | null = null;
+        let finalImageUrl: string | null = item.image_url;
 
         if (imageMode === 'upload' && imageFile) {
             finalImageUrl = await onUploadImage(imageFile);
@@ -85,7 +79,9 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
             finalImageUrl = imageUrl;
         }
 
-        await onAdd({
+        const parsedWearCount = Math.max(0, parseInt(wearCount) || 0);
+
+        await onSave(item.id, {
             title,
             image_url: finalImageUrl,
             price: parseFloat(price) || 0,
@@ -94,20 +90,20 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
             status,
             product_link: productLink || null,
             purchase_date: purchaseDate || null,
-            rating: null,
-            regret: false,
-            review_text: null,
-            target_cp_wear: null,
+            wear_count: parsedWearCount,
+            rating: status === 'owned' ? rating : null,
+            regret: status === 'owned' ? regret : false,
+            review_text: status === 'owned' ? (reviewText || null) : null,
+            target_cp_wear: status === 'owned' ? (parseFloat(targetCPW) || null) : null,
         });
 
-        resetForm();
         setLoading(false);
         onClose();
     };
 
     return (
         <AnimatePresence>
-            {isOpen && (
+            {isOpen && item && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     {/* Backdrop */}
                     <motion.div
@@ -128,7 +124,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
                     >
                         {/* Header */}
                         <div className="sticky top-0 flex items-center justify-between p-5 border-b border-border bg-card rounded-t-2xl z-10">
-                            <h2 className="text-lg font-semibold">Add New Item</h2>
+                            <h2 className="text-lg font-semibold">Edit Item</h2>
                             <button
                                 onClick={onClose}
                                 className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
@@ -145,26 +141,11 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
                                 <input
                                     type="text"
                                     value={title}
-                                    onChange={(e) => {
-                                        setTitle(e.target.value);
-                                        checkDuplicates(e.target.value, brand, category);
-                                    }}
+                                    onChange={(e) => setTitle(e.target.value)}
                                     placeholder="e.g., Classic White Oxford Shirt"
                                     required
                                     className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                 />
-                                {duplicateWarning && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-2"
-                                    >
-                                        <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                                        <p className="text-[11px] text-amber-600 font-medium">
-                                            {duplicateWarning}
-                                        </p>
-                                    </motion.div>
-                                )}
                             </div>
 
                             {/* Image */}
@@ -174,20 +155,16 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
                                     <button
                                         type="button"
                                         onClick={() => setImageMode('url')}
-                                        className={cn(
-                                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
-                                            imageMode === 'url' ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
-                                        )}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${imageMode === 'url' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                                            }`}
                                     >
                                         <LinkIcon className="w-3 h-3" /> URL
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setImageMode('upload')}
-                                        className={cn(
-                                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
-                                            imageMode === 'upload' ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
-                                        )}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${imageMode === 'upload' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                                            }`}
                                     >
                                         <Upload className="w-3 h-3" /> Upload
                                     </button>
@@ -248,10 +225,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
                                     <input
                                         type="text"
                                         value={brand}
-                                        onChange={(e) => {
-                                            setBrand(e.target.value);
-                                            checkDuplicates(title, e.target.value, category);
-                                        }}
+                                        onChange={(e) => setBrand(e.target.value)}
                                         placeholder="e.g., Zara"
                                         className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                     />
@@ -264,10 +238,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
                                     <label className="block text-sm font-medium mb-2">Category *</label>
                                     <select
                                         value={category}
-                                        onChange={(e) => {
-                                            setCategory(e.target.value as ItemCategory);
-                                            checkDuplicates(title, brand, e.target.value as ItemCategory);
-                                        }}
+                                        onChange={(e) => setCategory(e.target.value as ItemCategory)}
                                         className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                     >
                                         {CATEGORIES.map((cat) => (
@@ -302,16 +273,88 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
                                 />
                             </div>
 
-                            {/* Purchase Date (only for owned) */}
-                            {status === 'owned' && (
+                            {/* Wear Count */}
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Purchase Date</label>
+                                    <label className="block text-sm font-medium mb-2">Wear Count</label>
                                     <input
-                                        type="date"
-                                        value={purchaseDate}
-                                        onChange={(e) => setPurchaseDate(e.target.value)}
+                                        type="number"
+                                        value={wearCount}
+                                        onChange={(e) => setWearCount(e.target.value)}
+                                        min="0"
                                         className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                     />
+                                </div>
+                                {status === 'owned' && (
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Purchase Date</label>
+                                        <input
+                                            type="date"
+                                            value={purchaseDate}
+                                            onChange={(e) => setPurchaseDate(e.target.value)}
+                                            className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Rating Section (Owned only) */}
+                            {status === 'owned' && (
+                                <div className="p-4 rounded-xl bg-secondary/50 space-y-4">
+                                    <h3 className="text-sm font-semibold">Post-Purchase Feedback</h3>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Rating</label>
+                                        <StarRating
+                                            rating={rating}
+                                            onChange={setRating}
+                                            interactive
+                                            size="lg"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            id="regret"
+                                            checked={regret}
+                                            onChange={(e) => setRegret(e.target.checked)}
+                                            className="w-4 h-4 rounded border-border"
+                                        />
+                                        <label htmlFor="regret" className="text-sm text-muted-foreground">
+                                            I regret this purchase
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Review (optional)</label>
+                                        <textarea
+                                            value={reviewText}
+                                            onChange={(e) => setReviewText(e.target.value)}
+                                            placeholder="How do you feel about this purchase?"
+                                            rows={3}
+                                            className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all resize-none"
+                                        />
+                                    </div>
+
+                                    <div className="pt-2 border-t border-border/50">
+                                        <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                                            Cost Per Wear Goal
+                                            <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] uppercase font-bold tracking-wider">New</span>
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-3 text-muted-foreground">$</span>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0.01"
+                                                value={targetCPW}
+                                                onChange={(e) => setTargetCPW(e.target.value)}
+                                                placeholder="e.g. 5.00"
+                                                className="w-full pl-8 pr-4 py-3 rounded-xl border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                                            />
+                                            <p className="text-[10px] text-muted-foreground mt-1.5 px-1">
+                                                We'll track your wears until the cost-per-use reaches this target.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -324,7 +367,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, onUploadImage, existingIt
                                 {loading ? (
                                     <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mx-auto" />
                                 ) : (
-                                    'Add Item'
+                                    'Save Changes'
                                 )}
                             </button>
                         </form>

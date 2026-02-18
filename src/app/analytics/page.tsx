@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import {
     DollarSign,
     Heart,
@@ -10,10 +11,12 @@ import {
     BarChart3,
     Shirt,
     Package,
+    Activity,
 } from 'lucide-react';
 import { useItems } from '@/hooks/useItems';
 import { calculateStats, formatCurrency } from '@/lib/utils';
-import { CATEGORY_ICONS } from '@/lib/types';
+import { CATEGORY_ICONS, Item } from '@/lib/types';
+import { StarRating } from '@/components/wardrobe/StarRating';
 
 export default function AnalyticsPage() {
     const { items, loading } = useItems();
@@ -59,7 +62,7 @@ export default function AnalyticsPage() {
     ];
 
     // Category breakdown
-    const categoryBreakdown = ['shirts', 'pants', 'shoes', 'accessories'].map((cat) => {
+    const categoryBreakdown = ['shirts', 'pants', 'shoes', 'accessories', 'kurti', 'compare'].map((cat) => {
         const catItems = items.filter((i) => i.category === cat);
         const value = catItems.reduce((sum, i) => sum + Number(i.price), 0);
         return {
@@ -89,9 +92,18 @@ export default function AnalyticsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
             <div className="mb-8">
                 <h1 className="text-2xl sm:text-3xl font-bold font-display">Analytics</h1>
-                <p className="text-muted-foreground text-sm mt-1">
-                    Insights into your wardrobe spending and usage
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-1">
+                    <p className="text-muted-foreground text-sm">
+                        Insights into your wardrobe spending and usage
+                    </p>
+                    <Link
+                        href="/analytics/health"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary text-sm font-semibold rounded-xl hover:bg-primary hover:text-primary-foreground transition-all"
+                    >
+                        <Activity className="w-4 h-4" />
+                        Wardrobe Health Report
+                    </Link>
+                </div>
             </div>
 
             {/* Stat Cards */}
@@ -156,43 +168,106 @@ export default function AnalyticsPage() {
             )}
 
             {/* Category Breakdown */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="p-6 rounded-2xl bg-card border border-border"
-            >
-                <div className="flex items-center gap-2 mb-6">
-                    <BarChart3 className="w-5 h-5" />
-                    <h2 className="font-semibold">Category Breakdown</h2>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                    {categoryBreakdown.map((cat) => {
-                        const maxCount = Math.max(...categoryBreakdown.map((c) => c.count), 1);
-                        return (
-                            <div key={cat.category} className="p-4 rounded-xl bg-secondary/50">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-lg">{cat.icon}</span>
-                                        <span className="text-sm font-medium capitalize">{cat.category}</span>
+            <div className="grid lg:grid-cols-2 gap-8 mb-10">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="p-6 rounded-2xl bg-card border border-border"
+                >
+                    <div className="flex items-center gap-2 mb-6">
+                        <BarChart3 className="w-5 h-5" />
+                        <h2 className="font-semibold">Category Breakdown</h2>
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        {categoryBreakdown.map((cat) => {
+                            const maxCount = Math.max(...categoryBreakdown.map((c) => c.count), 1);
+                            return (
+                                <div key={cat.category} className="p-4 rounded-xl bg-secondary/50">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg">{cat.icon}</span>
+                                            <span className="text-sm font-medium capitalize">{cat.category}</span>
+                                        </div>
+                                        <span className="text-sm text-muted-foreground">{cat.count} items</span>
                                     </div>
-                                    <span className="text-sm text-muted-foreground">{cat.count} items</span>
+                                    {/* Bar */}
+                                    <div className="h-2 bg-border rounded-full overflow-hidden mb-2">
+                                        <motion.div
+                                            className={`h-full rounded-full badge-${cat.category}`}
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${(cat.count / maxCount) * 100}%` }}
+                                            transition={{ delay: 0.8, duration: 0.5 }}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">Value: {formatCurrency(cat.value)}</p>
                                 </div>
-                                {/* Bar */}
-                                <div className="h-2 bg-border rounded-full overflow-hidden mb-2">
-                                    <motion.div
-                                        className={`h-full rounded-full badge-${cat.category}`}
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${(cat.count / maxCount) * 100}%` }}
-                                        transition={{ delay: 0.8, duration: 0.5 }}
-                                    />
-                                </div>
-                                <p className="text-xs text-muted-foreground">Value: {formatCurrency(cat.value)}</p>
+                            );
+                        })}
+                    </div>
+                </motion.div>
+
+                {/* Rating Insights */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="p-6 rounded-2xl bg-card border border-border"
+                >
+                    <div className="flex items-center gap-2 mb-6">
+                        <Heart className="w-5 h-5 text-rose" />
+                        <h2 className="font-semibold">Rating Insights</h2>
+                    </div>
+
+                    <div className="space-y-6">
+                        {/* Overall Rating */}
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-lavender/20 border border-lavender/30">
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Average Rating</p>
+                                <p className="text-2xl font-bold">{stats.averageRating.toFixed(1)} / 5.0</p>
                             </div>
-                        );
-                    })}
-                </div>
-            </motion.div>
+                            <StarRating rating={Math.round(stats.averageRating)} size="lg" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 rounded-xl bg-secondary/50">
+                                <p className="text-xs text-muted-foreground mb-1">Best Rated Brand</p>
+                                <p className="font-semibold truncate">{stats.bestRatedBrand || '—'}</p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-secondary/50">
+                                <p className="text-xs text-muted-foreground mb-1">Satisfaction Rate</p>
+                                <p className="font-semibold">
+                                    {stats.ownedItems > 0
+                                        ? Math.round(((stats.ownedItems - (items.filter(i => i.regret).length)) / stats.ownedItems) * 100)
+                                        : 0}%
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Most Regretted */}
+                        {stats.mostRegrettedItem && (
+                            <div className="p-4 rounded-xl bg-rose/10 border border-rose/20">
+                                <p className="text-xs text-rose font-semibold uppercase tracking-wider mb-3">Biggest Regret</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-card border border-border">
+                                        {stats.mostRegrettedItem.image_url ? (
+                                            <img src={stats.mostRegrettedItem.image_url} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-xl">
+                                                {CATEGORY_ICONS[stats.mostRegrettedItem.category]}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium line-clamp-1">{stats.mostRegrettedItem.title}</p>
+                                        <p className="text-xs text-muted-foreground">{formatCurrency(Number(stats.mostRegrettedItem.price))} • {stats.mostRegrettedItem.brand}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+            </div>
         </div>
     );
 }

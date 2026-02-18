@@ -8,9 +8,12 @@ interface ItemGridProps {
     items: Item[];
     onDelete: (id: string) => void;
     onToggleStatus: (id: string, status: 'wishlist' | 'owned') => void;
+    onEdit?: (item: Item) => void;
+    onCompareToggle?: (item: Item) => void;
+    isCompareSelected?: (itemId: string) => boolean;
 }
 
-export function ItemGrid({ items, onDelete, onToggleStatus }: ItemGridProps) {
+export function ItemGrid({ items, onDelete, onToggleStatus, onEdit, onCompareToggle, isCompareSelected }: ItemGridProps) {
     if (items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -32,9 +35,13 @@ export function ItemGrid({ items, onDelete, onToggleStatus }: ItemGridProps) {
                         item={item}
                         onDelete={onDelete}
                         onToggleStatus={onToggleStatus}
+                        onEdit={onEdit}
+                        onCompareToggle={onCompareToggle}
+                        isCompareSelected={isCompareSelected?.(item.id)}
                     />
                 ))}
             </AnimatePresence>
         </div>
     );
 }
+

@@ -49,6 +49,8 @@ export default function OutfitsPage() {
         pants: null,
         shoes: null,
         accessories: null,
+        kurti: null,
+        compare: null,
     });
     const [outfitName, setOutfitName] = useState('');
     const [activeItem, setActiveItem] = useState<Item | null>(null);
@@ -93,13 +95,13 @@ export default function OutfitsPage() {
             .filter(Boolean)
             .map((i) => i!.id);
         await saveOutfit(outfitName, itemIds);
-        setSelectedItems({ shirts: null, pants: null, shoes: null, accessories: null });
+        setSelectedItems({ shirts: null, pants: null, shoes: null, accessories: null, kurti: null, compare: null });
         setOutfitName('');
         setSaving(false);
     };
 
     const clearSelection = () => {
-        setSelectedItems({ shirts: null, pants: null, shoes: null, accessories: null });
+        setSelectedItems({ shirts: null, pants: null, shoes: null, accessories: null, kurti: null, compare: null });
     };
 
     return (
@@ -134,8 +136,8 @@ export default function OutfitsPage() {
                                                     key={item.id}
                                                     onClick={() => handleClickSelect(item)}
                                                     className={`cursor-pointer rounded-xl transition-all ${selectedItems[item.category]?.id === item.id
-                                                            ? 'ring-2 ring-primary ring-offset-2'
-                                                            : ''
+                                                        ? 'ring-2 ring-primary ring-offset-2'
+                                                        : ''
                                                         }`}
                                                 >
                                                     <DraggableItem item={item} />
@@ -172,8 +174,8 @@ export default function OutfitsPage() {
                                                 key={cat.value}
                                                 id={cat.value}
                                                 className={`p-3 rounded-xl border-2 border-dashed transition-all min-h-[60px] flex items-center ${item
-                                                        ? 'border-primary/30 bg-primary/5'
-                                                        : 'border-border bg-secondary/50'
+                                                    ? 'border-primary/30 bg-primary/5'
+                                                    : 'border-border bg-secondary/50'
                                                     }`}
                                             >
                                                 {item ? (
